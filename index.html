@@ -143,7 +143,6 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
     'WhatsApp Image 2026-08-18 at 12.13.46 AM.jpeg',
     'WhatsApp Image 2026-08-18 at 12.13.48 AM.jpeg',
     'WhatsApp Image 2026-08-18 at 12.13.52 AM.jpeg',
-    'WhatsApp Image 2026-08-18 at 12.13.53 AM.jpeg',
     'WhatsApp Image 2026-08-18 at 4.21.53 PM.jpeg',
     'WhatsApp Image 2026-08-18 at 7.28.38 AM.jpeg'
   ];
@@ -210,10 +209,22 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
   renderMonths(state.memories);
 
   const dayNumber = Math.floor(Date.now() / 86400000);
+  const photoPath = name => `img/${encodeURIComponent(name).replace(/%2F/g, '/')}`;
   const image = document.createElement('section');
   image.className = 'love-gallery';
   image.setAttribute('aria-live', 'polite');
-  image.innerHTML = `<div class="gallery-grid"><figure class="gallery-photo"><img src="img/${encodeURIComponent(images[dayNumber % images.length]).replace(/%2F/g, '/') }" alt="Un recuerdo de Ana Isabel y Luis"><figcaption>Un recuerdo para guardar cerquita del corazón.</figcaption></figure><div class="gallery-copy"><p class="eyebrow">Una foto, un latido</p><h2>${messages[dayNumber % messages.length]}</h2><p>Cada día una imagen distinta, porque mi amor por ti siempre encuentra una nueva forma de decirse.</p><p class="gallery-day">La imagen y el mensaje de hoy</p></div></div>`;
+  image.innerHTML = `<div class="gallery-grid"><figure class="gallery-photo"><img src="${photoPath(images[dayNumber % images.length])}" alt="Un recuerdo de Ana Isabel y Luis"><figcaption>Un recuerdo para guardar cerquita del corazón.</figcaption></figure><div class="gallery-copy"><p class="eyebrow">Una foto, un latido</p><h2>${messages[dayNumber % messages.length]}</h2><p>Cada día una imagen distinta, porque mi amor por ti siempre encuentra una nueva forma de decirse.</p><p class="gallery-day">La imagen y el mensaje de hoy</p></div></div>`;
+  const dailyPhoto = image.querySelector('img');
+  let photoAttempts = 0;
+  dailyPhoto.addEventListener('error', () => {
+    photoAttempts += 1;
+    if (photoAttempts >= images.length) {
+      dailyPhoto.removeAttribute('src');
+      dailyPhoto.alt = 'No hay fotografías disponibles';
+      return;
+    }
+    dailyPhoto.src = photoPath(images[(dayNumber + photoAttempts) % images.length]);
+  });
   document.querySelector('.promise').before(image);
 })();
 </script></body></html>
