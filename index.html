@@ -125,4 +125,90 @@ setInterval(()=>{if(new Date().toISOString().slice(0,10)!==dateKey)location.relo
 function node(char,x,y,css){const n=document.createElement('span');n.className='fx';n.textContent=char;n.style.left=x+'px';n.style.top=y+'px';Object.assign(n.style,css);document.body.appendChild(n);setTimeout(()=>n.remove(),2200)}function floatHearts(){for(let i=0;i<30;i++)node(i%3?'♥':'♡',innerWidth/2+(Math.random()-.5)*260,innerHeight*.72,{color:'var(--rose)',fontSize:14+Math.random()*24+'px','--x':(Math.random()-.5)*220+'px','--r':(Math.random()-.5)*70+'deg',animation:`floatUp ${800+Math.random()*700}ms var(--ease) ${Math.random()*250}ms forwards`})}function petals(){for(let i=0;i<34;i++)node(i%2?'❀':'•',Math.random()*innerWidth,-30-Math.random()*200,{color:i%2?'var(--rose)':'var(--peach)',fontSize:12+Math.random()*18+'px','--x':(Math.random()-.5)*220+'px',animation:`petals ${1400+Math.random()*800}ms linear ${Math.random()*350}ms forwards`})}function burst(){for(let i=0;i<38;i++){const a=Math.PI*2*i/38,d=100+Math.random()*260;node(i%4?'♥':'✦',innerWidth/2,innerHeight/2,{color:i%2?'var(--rose)':'var(--peach)',fontSize:12+Math.random()*18+'px','--x':Math.cos(a)*d+'px','--y':Math.sin(a)*d+'px','--r':Math.random()*180+'deg',animation:`burst ${700+Math.random()*550}ms var(--ease) forwards`})}}function fireflies(){for(let i=0;i<45;i++)node('•',Math.random()*innerWidth,innerHeight*(.35+Math.random()*.6),{color:'oklch(82% .15 95)',textShadow:'0 0 12px currentColor',fontSize:10+Math.random()*9+'px','--x':(Math.random()-.5)*140+'px','--y':-50-Math.random()*180+'px',animation:`firefly ${900+Math.random()*1000}ms var(--ease) ${Math.random()*300}ms forwards`})}function stars(){for(let i=0;i<34;i++)node(i%3?'✦':'★',innerWidth/2,innerHeight/2,{color:i%2?'var(--peach)':'var(--blue)',fontSize:10+Math.random()*22+'px','--x':(Math.random()-.5)*innerWidth*.9+'px','--y':(Math.random()-.5)*innerHeight*.8+'px',animation:`star ${800+Math.random()*750}ms var(--ease) forwards`})}function ribbons(){for(let i=0;i<42;i++)node('▰',Math.random()*innerWidth,-40-Math.random()*160,{color:[`var(--rose)`,`var(--sage)`,`var(--peach)`,`var(--blue)`][i%4],fontSize:7+Math.random()*9+'px','--x':(Math.random()-.5)*170+'px',animation:`ribbon ${1200+Math.random()*800}ms linear ${Math.random()*300}ms forwards`})}function heartbeat(){const c=document.querySelector('#dailyCard');c.style.animation='pulse 420ms cubic-bezier(.65,0,.35,1) 3';setTimeout(()=>c.style.animation='',1400);floatHearts()}function lightKiss(){const f=document.createElement('div');f.className='screen-flash';document.body.appendChild(f);setTimeout(()=>f.remove(),1000);stars()}
 const text=document.querySelector('#memoryText'),note=document.querySelector('#savedNote');text.value=state.memories[dateKey]||'';if(text.value)note.textContent='Este recuerdo ya está guardado ♥';document.querySelector('#saveMemory').addEventListener('click',()=>{const v=text.value.trim();if(!v){note.textContent='Escriban aunque sea una línea pequeñita.';return}state.memories[dateKey]=v;save();note.textContent='Guardado para volver a este día ♥';toast.textContent='Un recuerdo más para nuestra historia';toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2600)});
 })();
+</script>
+<script>
+(() => {
+  const images = [
+    'WhatsApp Image 2026-08-17 at 8.09.02 PM.jpeg',
+    'WhatsApp Image 2026-08-18 at 10.22.35 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 11.17.13 PM.jpeg',
+    'WhatsApp Image 2026-08-18 at 11.18.03 PM.jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.15 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.16 AM (1).jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.16 AM (2).jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.16 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.17 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.45 AM (1).jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.45 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.46 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.48 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.52 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 12.13.53 AM.jpeg',
+    'WhatsApp Image 2026-08-18 at 4.21.53 PM.jpeg',
+    'WhatsApp Image 2026-08-18 at 7.28.38 AM.jpeg'
+  ];
+  const messages = [
+    'Mi amor por ti encuentra una nueva forma de decirse cada día.',
+    'Contigo, hasta los instantes sencillos se vuelven inolvidables.',
+    'Te elijo por todo lo que eres y por todo lo bonito que construimos.',
+    'Mi lugar favorito sigue siendo cualquier lugar donde estés tú.',
+    'Gracias por llenar mi vida de ternura, calma y motivos para sonreír.',
+    'Cada recuerdo contigo es una promesa de que lo mejor aún está por venir.',
+    'A tu lado aprendí que el amor también puede sentirse como hogar.',
+    'Tú haces que mi corazón quiera guardar cada segundo para siempre.',
+    'Si pudiera volver a elegir, volvería a encontrarte una y otra vez.',
+    'Lo más bonito de mi historia siempre tendrá tu nombre.',
+    'Amarte es mirar el futuro y sentir que ya tengo todo lo que necesito.',
+    'Tu risa es uno de mis lugares favoritos en este mundo.',
+    'Qué suerte la mía de coincidir contigo en esta vida.',
+    'Cada fotografía guarda un instante, pero mi corazón guarda todo de ti.',
+    'Mi amor por ti crece despacio, profundo y bonito, como crecen las cosas verdaderas.',
+    'Contigo quiero seguir llenando el frasco de recuerdos y la vida de momentos.'
+  ];
+  const style = document.createElement('style');
+  style.textContent = '.love-gallery{padding:120px clamp(20px,5vw,76px);background:var(--cream)}.gallery-grid{max-width:1120px;margin:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.8fr);gap:clamp(38px,8vw,100px);align-items:center}.gallery-photo{margin:0;transform:rotate(-2deg)}.gallery-photo img{display:block;width:100%;height:min(62vw,620px);object-fit:cover;border:12px solid var(--light);box-shadow:var(--shadow);background:var(--light)}.gallery-photo figcaption{text-align:center;margin-top:20px;color:var(--muted);font:italic 500 1rem "Fraunces",serif}.gallery-copy h2{margin:0;color:var(--wine);font-size:clamp(2.7rem,5vw,5.3rem);line-height:.95;letter-spacing:-.045em}.gallery-copy p{margin:24px 0 0;color:var(--muted);font-size:1.05rem}.gallery-day{margin-top:22px!important;color:var(--rose)!important;font-size:.76rem!important;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.memory-archive{max-width:1120px;margin:76px auto 0}.memory-archive h3{margin:0;color:var(--wine);font:650 clamp(1.8rem,3vw,2.8rem) "Fraunces",serif}.archive-intro{margin:8px 0 28px;color:var(--muted)}.month-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}.month-jar{padding:24px 22px 22px;border:1px solid var(--line);border-radius:26px 26px 18px 18px;background:var(--light);box-shadow:0 12px 28px oklch(34% .04 24/.08)}.month-jar h4{margin:0;color:var(--wine);font:650 1.35rem "Fraunces",serif}.month-jar ul{margin:14px 0 0;padding:0;list-style:none}.month-jar li{padding:12px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}.month-jar time{display:block;margin-bottom:4px;color:var(--rose);font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}@media(max-width:820px){.gallery-grid{grid-template-columns:1fr}}';
+  document.head.appendChild(style);
+
+  const memory = document.querySelector('.memory');
+  const archive = document.createElement('div');
+  archive.className = 'memory-archive';
+  archive.innerHTML = '<h3>Nuestros frascos por mes</h3><p class="archive-intro">Cada mes guarda sus pequeñas historias para volver a ellas cuando queramos.</p><div class="month-list" id="monthList"></div>';
+  memory.appendChild(archive);
+  const monthList = archive.querySelector('#monthList');
+  const text = document.querySelector('#memoryText');
+  const savedState = () => { try { return JSON.parse(localStorage.getItem('ana-isabel-camino-v2')) || {}; } catch (error) { return {}; } };
+  const saveMemoryInstantly = () => {
+    const state = savedState();
+    state.memories = state.memories || {};
+    const today = new Date().toISOString().slice(0, 10);
+    const value = text.value.trim();
+    if (value) state.memories[today] = value;
+    else delete state.memories[today];
+    localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(state));
+    document.querySelector('#savedNote').textContent = value ? 'Guardado automáticamente ♥' : '';
+    renderMonths(state.memories);
+  };
+  const renderMonths = memories => {
+    const groups = {};
+    Object.entries(memories || {}).sort(([a], [b]) => b.localeCompare(a)).forEach(([date, value]) => {
+      const month = date.slice(0, 7);
+      groups[month] = groups[month] || [];
+      groups[month].push({ date, value });
+    });
+    monthList.innerHTML = Object.entries(groups).map(([month, entries]) => {
+      const label = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(new Date(`${month}-15T12:00:00`));
+      return `<article class="month-jar"><h4>${label}</h4><ul>${entries.map(entry => `<li><time datetime="${entry.date}">${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long' }).format(new Date(`${entry.date}T12:00:00`))}</time>${entry.value.replace(/[&<>]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[character]))}</li>`).join('')}</ul></article>`;
+    }).join('') || '<p class="archive-intro">El primer recuerdo del mes aparecerá aquí.</p>';
+  };
+  text.addEventListener('input', saveMemoryInstantly);
+  const state = savedState();
+  renderMonths(state.memories);
+
+  const dayNumber = Math.floor(Date.now() / 86400000);
+  const image = document.createElement('section');
+  image.className = 'love-gallery';
+  image.setAttribute('aria-live', 'polite');
+  image.innerHTML = `<div class="gallery-grid"><figure class="gallery-photo"><img src="img/${encodeURIComponent(images[dayNumber % images.length]).replace(/%2F/g, '/') }" alt="Un recuerdo de Ana Isabel y Luis"><figcaption>Un recuerdo para guardar cerquita del corazón.</figcaption></figure><div class="gallery-copy"><p class="eyebrow">Una foto, un latido</p><h2>${messages[dayNumber % messages.length]}</h2><p>Cada día una imagen distinta, porque mi amor por ti siempre encuentra una nueva forma de decirse.</p><p class="gallery-day">La imagen y el mensaje de hoy</p></div></div>`;
+  document.querySelector('.promise').before(image);
+})();
 </script></body></html>
