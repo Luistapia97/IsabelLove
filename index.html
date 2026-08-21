@@ -177,12 +177,14 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
   const monthList = archive.querySelector('#monthList');
   const text = document.querySelector('#memoryText');
   const savedState = () => { try { return JSON.parse(localStorage.getItem('ana-isabel-camino-v2')) || {}; } catch (error) { return {}; } };
+  const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
   const saveMemoryInstantly = () => {
     const state = savedState();
     state.memories = state.memories || {};
     const today = new Date().toISOString().slice(0, 10);
     const value = text.value.trim();
-    if (value) state.memories[today] = value;
+    const question = document.querySelector('#prompt').textContent.trim();
+    if (value) state.memories[today] = { question, answer: value };
     else delete state.memories[today];
     localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(state));
     document.querySelector('#savedNote').textContent = value ? 'Guardado automáticamente ♥' : '';
@@ -197,11 +199,14 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
     });
     monthList.innerHTML = Object.entries(groups).map(([month, entries]) => {
       const label = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(new Date(`${month}-15T12:00:00`));
-      return `<article class="month-jar"><h4>${label}</h4><ul>${entries.map(entry => `<li><time datetime="${entry.date}">${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long' }).format(new Date(`${entry.date}T12:00:00`))}</time>${entry.value.replace(/[&<>]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[character]))}</li>`).join('')}</ul></article>`;
+      return `<article class="month-jar"><h4>${label}</h4><ul>${entries.map(entry => { const memory = typeof entry.value === 'string' ? { question: 'Recuerdo guardado', answer: entry.value } : entry.value; return `<li><time datetime="${entry.date}">${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long' }).format(new Date(`${entry.date}T12:00:00`))}</time><strong>${escapeHtml(memory.question || 'Pregunta del día')}</strong><br>${escapeHtml(memory.answer || '')}</li>`; }).join('')}</ul></article>`;
     }).join('') || '<p class="archive-intro">El primer recuerdo del mes aparecerá aquí.</p>';
   };
-  text.addEventListener('input', saveMemoryInstantly);
   const state = savedState();
+  const todayMemory = state.memories && state.memories[new Date().toISOString().slice(0, 10)];
+  if (todayMemory && typeof todayMemory === 'object') text.value = todayMemory.answer || '';
+  text.addEventListener('input', saveMemoryInstantly);
+  document.querySelector('#saveMemory').addEventListener('click', saveMemoryInstantly);
   renderMonths(state.memories);
 
   const dayNumber = Math.floor(Date.now() / 86400000);
