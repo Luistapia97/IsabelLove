@@ -175,6 +175,11 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
   memory.appendChild(archive);
   const monthList = archive.querySelector('#monthList');
   const text = document.querySelector('#memoryText');
+  const author = document.createElement('select');
+  author.id = 'memoryAuthor';
+  author.innerHTML = '<option value="luis">Responde Luis</option><option value="ana">Responde Ana Isabel</option>';
+  author.style.cssText = 'width:100%;margin-top:18px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--light);color:var(--ink)';
+  text.parentElement.insertBefore(author, text);
   const savedState = () => { try { return JSON.parse(localStorage.getItem('ana-isabel-camino-v2')) || {}; } catch (error) { return {}; } };
   const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
   const saveMemoryInstantly = () => {
@@ -183,11 +188,18 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
     const today = new Date().toISOString().slice(0, 10);
     const value = text.value.trim();
     const question = document.querySelector('#prompt').textContent.trim();
-    if (value) state.memories[today] = { question, answer: value };
+    const current = state.memories[today];
+    const memory = typeof current === 'object' ? current : { answer: current || '' };
+    memory.question = question;
+    memory.responses = memory.responses || {};
+    memory.responses[author.value] = value;
+    memory.answer = value;
+    if (value || memory.responses.luis || memory.responses.ana) state.memories[today] = memory;
     else delete state.memories[today];
     localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(state));
     document.querySelector('#savedNote').textContent = value ? 'Guardado automáticamente ♥' : '';
     renderMonths(state.memories);
+    fetch('/api/memories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: today, question, author: author.value, answer: value }) }).catch(() => {});
   };
   const renderMonths = memories => {
     const groups = {};
@@ -198,15 +210,34 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
     });
     monthList.innerHTML = Object.entries(groups).map(([month, entries]) => {
       const label = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(new Date(`${month}-15T12:00:00`));
-      return `<article class="month-jar"><h4>${label}</h4><ul>${entries.map(entry => { const memory = typeof entry.value === 'string' ? { question: 'Recuerdo guardado', answer: entry.value } : entry.value; return `<li><time datetime="${entry.date}">${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long' }).format(new Date(`${entry.date}T12:00:00`))}</time><strong>${escapeHtml(memory.question || 'Pregunta del día')}</strong><br>${escapeHtml(memory.answer || '')}</li>`; }).join('')}</ul></article>`;
+      return `<article class="month-jar"><h4>${label}</h4><ul>${entries.map(entry => { const memory = typeof entry.value === 'string' ? { question: 'Recuerdo guardado', answer: entry.value } : entry.value; const responses = memory.responses || { luis: memory.answer || '', ana: '' }; return `<li><time datetime="${entry.date}">${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long' }).format(new Date(`${entry.date}T12:00:00`))}</time><strong>${escapeHtml(memory.question || 'Pregunta del día')}</strong><br><b>Luis:</b> ${escapeHtml(responses.luis || 'Aún no responde')}<br><b>Ana Isabel:</b> ${escapeHtml(responses.ana || 'Aún no responde')}</li>`; }).join('')}</ul></article>`;
     }).join('') || '<p class="archive-intro">El primer recuerdo del mes aparecerá aquí.</p>';
   };
   const state = savedState();
   const todayMemory = state.memories && state.memories[new Date().toISOString().slice(0, 10)];
-  if (todayMemory && typeof todayMemory === 'object') text.value = todayMemory.answer || '';
+  if (todayMemory && typeof todayMemory === 'object') text.value = (todayMemory.responses && todayMemory.responses[author.value]) || todayMemory.answer || '';
   text.addEventListener('input', saveMemoryInstantly);
+  author.addEventListener('change', () => {
+    const current = savedState().memories?.[new Date().toISOString().slice(0, 10)];
+    text.value = current?.responses?.[author.value] || '';
+  });
   document.querySelector('#saveMemory').addEventListener('click', saveMemoryInstantly);
   renderMonths(state.memories);
+  fetch('/api/memories', { cache: 'no-store' }).then(response => response.ok ? response.json() : Promise.reject()).then(data => {
+    const latest = savedState();
+    latest.memories = latest.memories || {};
+    data.memories.forEach(row => { latest.memories[row.date_key.slice(0, 10)] = { question: row.question, responses: { luis: row.answer_luis, ana: row.answer_ana } }; });
+    localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(latest));
+    renderMonths(latest.memories);
+    const today = latest.memories[new Date().toISOString().slice(0, 10)];
+    if (today) text.value = today.responses?.[author.value] || '';
+  }).catch(() => {});
+  setInterval(() => fetch('/api/memories', { cache: 'no-store' }).then(response => response.ok ? response.json() : Promise.reject()).then(data => {
+    const latest = savedState();
+    latest.memories = { ...latest.memories, ...Object.fromEntries(data.memories.map(row => [row.date_key.slice(0, 10), { question: row.question, responses: { luis: row.answer_luis, ana: row.answer_ana } }])) };
+    localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(latest));
+    renderMonths(latest.memories);
+  }).catch(() => {}), 10000);
 
   const dayNumber = Math.floor(Date.now() / 86400000);
   const photoPath = name => `img/${encodeURIComponent(name).replace(/%2F/g, '/')}`;
