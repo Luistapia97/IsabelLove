@@ -171,9 +171,10 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
   const memory = document.querySelector('.memory');
   const archive = document.createElement('div');
   archive.className = 'memory-archive';
-  archive.innerHTML = '<h3>Nuestros frascos por mes</h3><p class="archive-intro">Cada mes guarda sus pequeñas historias para volver a ellas cuando queramos.</p><div class="month-list" id="monthList"></div>';
+  archive.innerHTML = '<h3>Nuestros frascos por mes</h3><p class="archive-intro">Cada mes guarda sus pequeñas historias para volver a ellas cuando queramos.</p><p id="syncStatus" class="archive-intro">Conectando los recuerdos compartidos...</p><div class="month-list" id="monthList"></div>';
   memory.appendChild(archive);
   const monthList = archive.querySelector('#monthList');
+  const syncStatus = archive.querySelector('#syncStatus');
   const text = document.querySelector('#memoryText');
   const author = document.createElement('select');
   author.id = 'memoryAuthor';
@@ -199,7 +200,7 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
     localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(state));
     document.querySelector('#savedNote').textContent = value ? 'Guardado automáticamente ♥' : '';
     renderMonths(state.memories);
-    fetch('/api/memories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: today, question, author: author.value, answer: value }) }).catch(() => {});
+    fetch('/api/memories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: today, question, author: author.value, answer: value }) }).then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); syncStatus.textContent = 'Recuerdo compartido con ambos ♥'; }).catch(error => { syncStatus.textContent = 'Guardado solo en este dispositivo. Revisa la conexión de Vercel.'; console.error('No se pudo compartir el recuerdo:', error); });
   };
   const renderMonths = memories => {
     const groups = {};
@@ -223,21 +224,18 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
   });
   document.querySelector('#saveMemory').addEventListener('click', saveMemoryInstantly);
   renderMonths(state.memories);
-  fetch('/api/memories', { cache: 'no-store' }).then(response => response.ok ? response.json() : Promise.reject()).then(data => {
+  const mergeRemoteMemories = data => {
     const latest = savedState();
     latest.memories = latest.memories || {};
-    data.memories.forEach(row => { latest.memories[row.date_key.slice(0, 10)] = { question: row.question, responses: { luis: row.answer_luis, ana: row.answer_ana } }; });
+    data.memories.forEach(row => { const date = row.date_key.slice(0, 10); const local = latest.memories[date]; latest.memories[date] = { question: row.question, responses: { luis: row.answer_luis || local?.responses?.luis || '', ana: row.answer_ana || local?.responses?.ana || '' } }; });
     localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(latest));
     renderMonths(latest.memories);
     const today = latest.memories[new Date().toISOString().slice(0, 10)];
     if (today) text.value = today.responses?.[author.value] || '';
-  }).catch(() => {});
-  setInterval(() => fetch('/api/memories', { cache: 'no-store' }).then(response => response.ok ? response.json() : Promise.reject()).then(data => {
-    const latest = savedState();
-    latest.memories = { ...latest.memories, ...Object.fromEntries(data.memories.map(row => [row.date_key.slice(0, 10), { question: row.question, responses: { luis: row.answer_luis, ana: row.answer_ana } }])) };
-    localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(latest));
-    renderMonths(latest.memories);
-  }).catch(() => {}), 10000);
+  };
+  const syncMemories = () => fetch('/api/memories', { cache: 'no-store' }).then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))).then(data => { mergeRemoteMemories(data); syncStatus.textContent = 'Recuerdos sincronizados en tiempo real ♥'; }).catch(error => { syncStatus.textContent = 'Sin conexión con la base compartida. Mostrando respaldo local.'; console.error('No se pudo sincronizar:', error); });
+  syncMemories();
+  setInterval(syncMemories, 10000);
 
   const dayNumber = Math.floor(Date.now() / 86400000);
   const photoPath = name => `img/${encodeURIComponent(name).replace(/%2F/g, '/')}`;
