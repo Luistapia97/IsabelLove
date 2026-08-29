@@ -1,11 +1,11 @@
 # IsabelLove en Vercel
 
-La página usa `api/memories.js` para compartir preguntas y respuestas entre dispositivos. Netlify puede servir el HTML, pero no ejecuta esta API ni comparte los recuerdos.
+La página y su API se despliegan juntas en Vercel para compartir preguntas y respuestas entre dispositivos.
 
 ## Configuración
 
 1. Importa este repositorio en Vercel.
-2. En Vercel, crea una integración de **Vercel Postgres** o conecta una base compatible con `@vercel/postgres`.
+2. En Vercel, conecta una base Postgres compatible con `@vercel/postgres` mediante una integración como Neon.
 3. Comprueba que exista la variable de entorno `POSTGRES_URL` en Production.
 4. Despliega el proyecto.
 
@@ -13,7 +13,7 @@ La tabla `memories` se crea automáticamente en la primera petición. Cada fecha
 
 ## Comprobación
 
-Usa la URL de Vercel, no la URL antigua de Netlify. Abre `https://tu-proyecto.vercel.app/api/memories`: debe responder con JSON, por ejemplo `{ "memories": [] }`.
+Usa la URL de Vercel. Abre `https://tu-proyecto.vercel.app/api/memories`: debe responder con JSON, por ejemplo `{ "memories": [] }`.
 
 Si responde `404`, el proyecto desplegado no contiene la carpeta `api`. Si responde `500`, revisa que la base Neon esté conectada al proyecto y que exista `POSTGRES_URL` en **Production**; después haz un nuevo redeploy.
 
