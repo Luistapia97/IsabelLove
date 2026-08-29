@@ -211,7 +211,7 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
     });
     monthList.innerHTML = Object.entries(groups).map(([month, entries]) => {
       const label = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(new Date(`${month}-15T12:00:00`));
-      return `<article class="month-jar"><h4>${label}</h4><ul>${entries.map(entry => { const memory = typeof entry.value === 'string' ? { question: 'Recuerdo guardado', answer: entry.value } : entry.value; const responses = memory.responses || { luis: memory.answer || '', ana: '' }; return `<li><time datetime="${entry.date}">${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long' }).format(new Date(`${entry.date}T12:00:00`))}</time><strong>${escapeHtml(memory.question || 'Pregunta del día')}</strong><br><b>Luis:</b> ${escapeHtml(responses.luis || 'Aún no responde')}<br><b>Ana Isabel:</b> ${escapeHtml(responses.ana || 'Aún no responde')}</li>`; }).join('')}</ul></article>`;
+      return `<article class="month-jar"><h4>${label}</h4><ul>${entries.map(entry => { const memory = typeof entry.value === 'string' ? { question: 'Recuerdo guardado', answer: entry.value } : entry.value; const responses = memory.responses || { luis: memory.answer || '', ana: '' }; const accepted = memory.yes || {}; return `<li><time datetime="${entry.date}">${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long' }).format(new Date(`${entry.date}T12:00:00`))}</time><strong>${escapeHtml(memory.question || 'Pregunta del día')}</strong><br><b>Luis:</b> ${escapeHtml(responses.luis || 'Aún no responde')} ${accepted.luis ? '♥ Sí aceptó' : ''}<br><b>Ana Isabel:</b> ${escapeHtml(responses.ana || 'Aún no responde')} ${accepted.ana ? '♥ Sí aceptó' : ''}</li>`; }).join('')}</ul></article>`;
     }).join('') || '<p class="archive-intro">El primer recuerdo del mes aparecerá aquí.</p>';
   };
   const state = savedState();
@@ -227,15 +227,17 @@ const text=document.querySelector('#memoryText'),note=document.querySelector('#s
   const mergeRemoteMemories = data => {
     const latest = savedState();
     latest.memories = latest.memories || {};
-    data.memories.forEach(row => { const date = row.date_key.slice(0, 10); const local = latest.memories[date]; latest.memories[date] = { question: row.question, responses: { luis: row.answer_luis || local?.responses?.luis || '', ana: row.answer_ana || local?.responses?.ana || '' } }; });
+    data.memories.forEach(row => { const date = row.date_key.slice(0, 10); const local = latest.memories[date]; latest.memories[date] = { question: row.question, responses: { luis: row.answer_luis || local?.responses?.luis || '', ana: row.answer_ana || local?.responses?.ana || '' }, yes: { luis: Boolean(row.yes_luis || local?.yes?.luis), ana: Boolean(row.yes_ana || local?.yes?.ana) } }; });
     localStorage.setItem('ana-isabel-camino-v2', JSON.stringify(latest));
     renderMonths(latest.memories);
     const today = latest.memories[new Date().toISOString().slice(0, 10)];
     if (today) text.value = today.responses?.[author.value] || '';
   };
-  const syncMemories = () => fetch('/api/memories', { cache: 'no-store' }).then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))).then(data => { mergeRemoteMemories(data); syncStatus.textContent = 'Recuerdos sincronizados en tiempo real ♥'; }).catch(error => { syncStatus.textContent = 'Sin conexión con la base compartida. Mostrando respaldo local.'; console.error('No se pudo sincronizar:', error); });
+  const updateSharedYes = data => { const row = data.memories.find(item => item.date_key.slice(0, 10) === new Date().toISOString().slice(0, 10)); const accepted = author.value === 'luis' ? row?.yes_luis : row?.yes_ana; const yesButton = document.querySelector('#yesBtn'); if (accepted) { yesButton.textContent = 'Hoy ya dijiste que sí ♥'; yesButton.disabled = true; } };
+  const syncMemories = () => fetch('/api/memories', { cache: 'no-store' }).then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))).then(data => { mergeRemoteMemories(data); updateSharedYes(data); syncStatus.textContent = 'Recuerdos sincronizados en tiempo real ♥'; }).catch(error => { syncStatus.textContent = 'Sin conexión con la base compartida. Mostrando respaldo local.'; console.error('No se pudo sincronizar:', error); });
   syncMemories();
   setInterval(syncMemories, 10000);
+  document.querySelector('#yesBtn').addEventListener('click', () => { const today = new Date().toISOString().slice(0, 10); const question = document.querySelector('#prompt').textContent.trim(); fetch('/api/memories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: today, question, author: author.value, answer: '', yes: true }) }).then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); syncStatus.textContent = 'Tu sí ya está compartido con ambos ♥'; }).catch(error => { syncStatus.textContent = 'El sí quedó solo en este dispositivo.'; console.error('No se pudo compartir el sí:', error); }); });
 
   const dayNumber = Math.floor(Date.now() / 86400000);
   const photoPath = name => `img/${encodeURIComponent(name).replace(/%2F/g, '/')}`;
